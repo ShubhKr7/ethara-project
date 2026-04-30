@@ -34,16 +34,16 @@ type Task = {
   assignee: Member | null;
 };
 
-const COLUMNS: { id: TaskStatus; label: string; border: string; dot: string; glow: string }[] = [
-  { id: "TODO",        label: "To Do",       border: "border-slate-500/20", dot: "bg-slate-400",  glow: "bg-slate-500/5"  },
-  { id: "IN_PROGRESS", label: "In Progress", border: "border-amber-500/20", dot: "bg-amber-400",  glow: "bg-amber-500/5"  },
-  { id: "DONE",        label: "Done",        border: "border-green-500/20", dot: "bg-green-400",  glow: "bg-green-500/5"  },
+const COLUMNS: { id: TaskStatus; label: string; border: string; dot: string; bg: string }[] = [
+  { id: "TODO",        label: "To Do",       border: "border-slate-400/20",  dot: "bg-slate-400",  bg: "bg-slate-400/5"  },
+  { id: "IN_PROGRESS", label: "In Progress", border: "border-amber-400/20", dot: "bg-amber-400",  bg: "bg-amber-400/5"  },
+  { id: "DONE",        label: "Done",        border: "border-green-400/20", dot: "bg-green-400",  bg: "bg-green-400/5"  },
 ];
 
 const PRIORITY_STYLES: Record<TaskPriority, { label: string; cls: string }> = {
-  LOW:    { label: "Low",    cls: "text-blue-400  bg-blue-500/10  border-blue-500/20"  },
-  MEDIUM: { label: "Medium", cls: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
-  HIGH:   { label: "High",   cls: "text-red-400   bg-red-500/10   border-red-500/20"   },
+  LOW:    { label: "Low",    cls: "text-blue-600  bg-blue-500/10  border-blue-500/20"  },
+  MEDIUM: { label: "Medium", cls: "text-amber-600 bg-amber-500/10 border-amber-500/20" },
+  HIGH:   { label: "High",   cls: "text-red-600   bg-red-500/10   border-red-500/20"   },
 };
 
 /* ─────────────────────────────────────────────
@@ -56,8 +56,8 @@ function DroppableColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-2.5 flex-1 min-h-[120px] rounded-xl transition-colors ${
-        isOver ? "bg-white/5 ring-1 ring-white/10" : ""
+      className={`flex flex-col gap-3 flex-1 min-h-[150px] rounded-2xl transition-all duration-200 ${
+        isOver ? "bg-primary/5 ring-2 ring-primary/20 scale-[0.99]" : ""
       }`}
     >
       {children}
@@ -98,12 +98,12 @@ function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`group rounded-xl border border-white/8 bg-white/4 p-4 cursor-grab active:cursor-grabbing
-        hover:border-white/15 hover:bg-white/6 transition-all select-none
-        ${overlay ? "shadow-2xl rotate-[1.5deg] border-violet-400/20 bg-[#1a1030]" : ""}`}
+      className={`group rounded-2xl border border-border bg-card p-5 cursor-grab active:cursor-grabbing
+        hover:border-primary/30 hover:shadow-lg transition-all select-none shadow-sm
+        ${overlay ? "shadow-2xl rotate-[1.5deg] border-primary/40 bg-card ring-2 ring-primary/10" : ""}`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-sm font-body text-white font-medium leading-snug flex-1">{task.title}</p>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <p className="text-sm font-body text-foreground font-bold leading-snug flex-1 group-hover:text-primary transition-colors">{task.title}</p>
         {!overlay && (
           <DeleteTaskButton 
             taskId={task.id} 
@@ -114,21 +114,21 @@ function TaskCard({
       </div>
 
       {task.description && (
-        <p className="text-xs text-white/35 font-body mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-xs text-muted-foreground font-body mb-4 line-clamp-2 leading-relaxed">{task.description}</p>
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-[10px] font-body font-semibold border rounded-full px-2 py-0.5 ${p.cls}`}>
+        <span className={`text-[10px] font-bold uppercase tracking-tight border rounded-full px-2.5 py-1 ${p.cls}`}>
           {p.label}
         </span>
         {task.dueDate && (
-          <span className={`text-[10px] font-body ml-auto ${overdue ? "text-red-400" : "text-white/30"}`}>
+          <span className={`text-[10px] font-bold ml-auto uppercase tracking-wider ${overdue ? "text-red-500" : "text-muted-foreground/50"}`}>
             {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
           </span>
         )}
         {task.assignee && (
           <div
-            className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-[9px] font-bold text-white"
+            className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 border-2 border-card flex items-center justify-center text-[9px] font-bold text-white shadow-sm"
             title={task.assignee.name ?? ""}
           >
             {task.assignee.name?.[0]?.toUpperCase() ?? "?"}
@@ -167,42 +167,43 @@ function CreateTaskForm({
   };
 
   return (
-    <div className="mt-1 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
-      <form onSubmit={handleSubmit} className="space-y-2">
+    <div className="mt-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-inner">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <input
-          name="title" required autoFocus placeholder="Task title…"
-          className="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/25 focus:border-violet-500/50 focus:outline-none font-body"
+          name="title" required autoFocus placeholder="What needs to be done?"
+          className="block w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/40 focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all"
         />
-        <input
+        <textarea
           name="description" placeholder="Description (optional)"
-          className="block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none font-body"
+          rows={2}
+          className="block w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/40 focus:border-primary focus:outline-none font-body transition-all resize-none"
         />
         <div className="flex gap-2">
           <select name="priority" defaultValue="MEDIUM"
-            className="flex-1 rounded-lg border border-white/10 bg-[#0d0d1a] px-3 py-2 text-sm text-white focus:outline-none font-body">
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
+            className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none font-body font-bold cursor-pointer transition-all">
+            <option value="LOW">Low Priority</option>
+            <option value="MEDIUM">Medium Priority</option>
+            <option value="HIGH">High Priority</option>
           </select>
           <input type="date" name="dueDate"
-            className="flex-1 rounded-lg border border-white/10 bg-[#0d0d1a] px-3 py-2 text-sm text-white focus:outline-none font-body" />
+            className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none font-body font-bold transition-all" />
         </div>
         {members.length > 1 && (
           <select name="assigneeId"
-            className="block w-full rounded-lg border border-white/10 bg-[#0d0d1a] px-3 py-2 text-sm text-white focus:outline-none font-body">
+            className="block w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none font-body font-bold cursor-pointer transition-all">
             <option value="">Unassigned</option>
             {members.map((m) => <option key={m.userId} value={m.userId}>{m.user.name}</option>)}
           </select>
         )}
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose}
-            className="flex-1 rounded-lg border border-white/10 py-2 text-xs text-white/40 hover:text-white transition-colors font-body">
+            className="flex-1 rounded-xl border border-border py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-body">
             Cancel
           </button>
           <button type="submit" disabled={pending}
-            className="flex-1 rounded-lg py-2 text-xs font-semibold text-white disabled:opacity-50 font-body"
+            className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white disabled:opacity-50 font-body shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}>
-            {pending ? "Adding…" : "Add Task"}
+            {pending ? "Adding…" : "Create Task"}
           </button>
         </div>
       </form>
@@ -226,7 +227,6 @@ export function KanbanBoard({
   const [addingTo, setAddingTo] = useState<TaskStatus | null>(null);
   const [, startTransition] = useTransition();
 
-  // Keep internal state in sync with initialTasks when they change from server
   useEffect(() => {
     setTasks(initialTasks);
   }, [initialTasks]);
@@ -237,7 +237,6 @@ export function KanbanBoard({
 
   const getColTasks = (s: TaskStatus) => tasks.filter((t) => t.status === s);
 
-  /* Find which column an id belongs to (column id itself, or a task's column) */
   const resolveTargetColumn = (id: string): TaskStatus | null => {
     if (COLUMNS.some((c) => c.id === id)) return id as TaskStatus;
     const task = tasks.find((t) => t.id === id);
@@ -253,7 +252,6 @@ export function KanbanBoard({
     const col = resolveTargetColumn(over.id as string);
     setOverColumnId(col);
 
-    // Optimistic move during drag
     const draggedTask = tasks.find((t) => t.id === active.id);
     if (draggedTask && col && draggedTask.status !== col) {
       setTasks((prev) =>
@@ -274,12 +272,10 @@ export function KanbanBoard({
 
     if (!draggedTask || !targetCol) return;
 
-    // The optimistic state is already set; now persist to server
     startTransition(() => updateTaskStatus(taskId, targetCol, projectId));
   };
 
   const handleDragCancel = () => {
-    // Revert optimistic state back to server state on cancel
     setTasks(initialTasks);
     setActiveTask(null);
     setOverColumnId(null);
@@ -298,7 +294,7 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex gap-5 h-full">
+      <div className="flex gap-6 h-full pb-8">
         {COLUMNS.map((col) => {
           const colTasks = getColTasks(col.id);
           const isOver   = overColumnId === col.id;
@@ -306,20 +302,18 @@ export function KanbanBoard({
           return (
             <div
               key={col.id}
-              className={`flex flex-col rounded-2xl border ${col.border} min-w-[300px] max-w-[300px] p-4 transition-colors ${
-                isOver ? col.glow : "bg-white/2"
+              className={`flex flex-col rounded-[2rem] border ${col.border} min-w-[320px] max-w-[320px] p-6 transition-all duration-300 ${
+                isOver ? "bg-muted/40 shadow-inner" : "bg-muted/10"
               }`}
             >
-              {/* Column header */}
-              <div className="flex items-center gap-2 mb-4 shrink-0">
-                <span className={`w-2 h-2 rounded-full ${col.dot}`} />
-                <span className="text-sm font-body font-semibold text-white">{col.label}</span>
-                <span className="ml-auto text-xs text-white/30 font-body bg-white/5 rounded-full px-2 py-0.5">
+              <div className="flex items-center gap-3 mb-6 shrink-0">
+                <span className={`w-2.5 h-2.5 rounded-full shadow-sm ${col.dot}`} />
+                <span className="text-sm font-bold text-foreground uppercase tracking-[0.1em]">{col.label}</span>
+                <span className="ml-auto text-[10px] font-bold text-muted-foreground bg-card shadow-sm border border-border rounded-full px-2.5 py-0.5">
                   {colTasks.length}
                 </span>
               </div>
 
-              {/* Drop zone + sortable tasks */}
               <SortableContext items={colTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
                 <DroppableColumn id={col.id} isOver={isOver}>
                   {colTasks.map((task) => (
@@ -333,7 +327,6 @@ export function KanbanBoard({
                 </DroppableColumn>
               </SortableContext>
 
-              {/* Add task button / inline form */}
               {addingTo === col.id ? (
                 <CreateTaskForm
                   projectId={projectId}
@@ -344,12 +337,12 @@ export function KanbanBoard({
               ) : (
                 <button
                   onClick={() => setAddingTo(col.id)}
-                  className="mt-3 shrink-0 flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white/30 hover:text-white hover:bg-white/5 transition-all font-body w-full cursor-pointer"
+                  className="mt-4 shrink-0 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold text-muted-foreground/60 hover:text-primary hover:bg-card hover:shadow-md hover:border-primary/10 border border-transparent transition-all font-body w-full cursor-pointer group"
                 >
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  Add task
+                  Add a new task
                 </button>
               )}
             </div>
@@ -357,8 +350,7 @@ export function KanbanBoard({
         })}
       </div>
 
-      {/* Floating drag preview */}
-      <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
+      <DragOverlay dropAnimation={{ duration: 200, easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)" }}>
         {activeTask && (
           <TaskCard 
             task={activeTask} 

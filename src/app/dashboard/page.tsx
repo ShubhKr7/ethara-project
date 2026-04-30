@@ -19,10 +19,10 @@ export default async function DashboardPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Header - Renders Instantly */}
       <div className="mb-10">
-        <p className="text-white/40 text-sm font-body mb-1">
+        <p className="text-muted-foreground text-sm font-body mb-1">
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </p>
-        <h1 className="font-heading italic text-white text-4xl md:text-5xl tracking-tight">
+        <h1 className="font-heading italic text-foreground text-5xl md:text-6xl tracking-tight">
           Good to see you, {firstName}.
         </h1>
       </div>

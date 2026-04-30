@@ -27,7 +27,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
       {/* Trigger button */}
       <button
         onClick={() => setStage("confirming")}
-        className="cursor-pointer rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/15 hover:border-red-500/40 transition-all font-body"
+        className="cursor-pointer rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all font-body"
       >
         Delete project
       </button>
@@ -39,8 +39,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-            style={{ background: "rgba(8, 8, 16, 0.92)", backdropFilter: "blur(12px)" }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-xl"
           >
             <AnimatePresence mode="wait">
               {stage === "loading" && (
@@ -53,10 +52,10 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
                   className="flex flex-col items-center gap-4"
                 >
                   <div className="relative w-14 h-14">
-                    <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-400 animate-spin" />
+                    <div className="absolute inset-0 rounded-full border-2 border-foreground/10" />
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-500 animate-spin" />
                   </div>
-                  <p className="text-white/70 font-body text-sm">Deleting project…</p>
+                  <p className="text-foreground/70 font-body font-bold text-sm uppercase tracking-widest">Deleting project…</p>
                 </motion.div>
               )}
 
@@ -69,7 +68,6 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   className="flex flex-col items-center gap-4"
                 >
-                  {/* Animated checkmark circle */}
                   <div className="relative w-16 h-16">
                     <svg viewBox="0 0 64 64" className="w-full h-full">
                       <motion.circle
@@ -97,8 +95,8 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
                     </svg>
                   </div>
                   <div className="text-center">
-                    <p className="text-white font-body font-semibold text-base">Project deleted</p>
-                    <p className="text-white/40 font-body text-sm mt-1">Redirecting you back…</p>
+                    <p className="text-foreground font-heading italic text-2xl">Project deleted</p>
+                    <p className="text-muted-foreground font-body text-xs mt-1 uppercase tracking-widest font-bold">Redirecting back…</p>
                   </div>
                 </motion.div>
               )}
@@ -117,8 +115,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50"
-              style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md"
               onClick={() => setStage("idle")}
             />
             <motion.div
@@ -130,30 +127,29 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
               className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             >
               <div
-                className="pointer-events-auto w-full max-w-sm rounded-2xl border border-white/10 p-7 shadow-2xl"
-                style={{ background: "linear-gradient(135deg, rgba(20,10,30,0.98) 0%, rgba(10,10,20,0.98) 100%)", backdropFilter: "blur(24px)" }}
+                className="pointer-events-auto w-full max-w-sm rounded-[2rem] border border-border p-8 shadow-2xl bg-card"
               >
-                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
-                  <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" className="text-red-400">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="text-red-500">
                     <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M10 11v6M14 11v6" strokeLinecap="round" />
                   </svg>
                 </div>
-                <h2 className="font-heading italic text-white text-2xl mb-2">Delete project?</h2>
-                <p className="text-white/50 text-sm font-body leading-relaxed mb-7">
-                  This will permanently delete the project along with all its tasks and member assignments. This action{" "}
-                  <span className="text-red-400 font-medium">cannot be undone</span>.
+                <h2 className="font-heading italic text-foreground text-3xl mb-3">Delete project?</h2>
+                <p className="text-muted-foreground text-sm font-body leading-relaxed mb-8">
+                  This will permanently delete the project along with all its tasks. This action{" "}
+                  <span className="text-red-500 font-bold uppercase tracking-tight">cannot be undone</span>.
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStage("idle")}
-                    className="flex-1 cursor-pointer rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all font-body"
+                    className="flex-1 cursor-pointer rounded-2xl border border-border py-3 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-body"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="flex-1 cursor-pointer rounded-xl py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all font-body"
+                    className="flex-1 cursor-pointer rounded-2xl py-3 text-sm font-bold text-white hover:opacity-90 transition-all font-body shadow-lg shadow-red-500/20"
                     style={{ background: "linear-gradient(135deg, #dc2626, #b91c1c)" }}
                   >
                     Yes, delete it

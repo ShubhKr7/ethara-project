@@ -32,8 +32,8 @@ export async function createProject(formData: FormData) {
     },
   });
 
-  // Do NOT call revalidatePath here — it triggers a Next.js router refresh that
-  // races against the client success animation. router.push below will load fresh data.
+  // Revalidate the dashboard layout to update the sidebar project list
+  revalidatePath("/dashboard", "layout");
   return { id: project.id };
 }
 
@@ -51,6 +51,7 @@ export async function updateProject(id: string, data: { name?: string; descripti
     },
   });
 
+  revalidatePath("/dashboard", "layout");
   revalidatePath(`/dashboard/projects/${id}`);
 }
 
@@ -104,7 +105,7 @@ export async function deleteProject(id: string) {
     where: { id, ownerId: session.user.id },
   });
 
-  revalidatePath("/dashboard/projects");
+  revalidatePath("/dashboard", "layout");
   // Return success — client will animate then redirect
   return { success: true };
 }

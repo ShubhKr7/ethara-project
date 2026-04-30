@@ -36,9 +36,9 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
       <button
         onClick={(e) => { e.stopPropagation(); setStage("confirming"); }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-white/30 hover:text-red-400 shrink-0 cursor-pointer"
+        className="opacity-0 group-hover:opacity-100 transition-all text-muted-foreground/30 hover:text-red-500 shrink-0 cursor-pointer p-1 rounded-lg hover:bg-red-500/10"
       >
-        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path d="M18 6L6 18M6 6l12 12" />
         </svg>
       </button>
@@ -50,8 +50,7 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-            style={{ background: "rgba(8, 8, 16, 0.85)", backdropFilter: "blur(8px)" }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <AnimatePresence mode="wait">
@@ -64,10 +63,10 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
                   className="flex flex-col items-center gap-4"
                 >
                   <div className="relative w-12 h-12">
-                    <div className="absolute inset-0 rounded-full border-2 border-white/10" />
-                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-400 animate-spin" />
+                    <div className="absolute inset-0 rounded-full border-2 border-foreground/10" />
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-red-500 animate-spin" />
                   </div>
-                  <p className="text-white/70 font-body text-sm">Removing task…</p>
+                  <p className="text-foreground/70 font-body font-bold text-sm uppercase tracking-widest">Removing task…</p>
                 </motion.div>
               )}
 
@@ -105,7 +104,7 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
                       />
                     </svg>
                   </div>
-                  <p className="text-white font-body font-semibold text-base">Deleted</p>
+                  <p className="text-foreground font-heading italic text-xl">Deleted</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -122,8 +121,7 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50"
-              style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md"
               onClick={(e) => { e.stopPropagation(); setStage("idle"); }}
             />
             <motion.div
@@ -134,23 +132,22 @@ export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteT
               className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             >
               <div
-                className="pointer-events-auto w-full max-w-xs rounded-2xl border border-white/10 p-6 shadow-2xl"
-                style={{ background: "linear-gradient(135deg, rgba(30,10,20,0.98) 0%, rgba(15,10,15,0.98) 100%)", backdropFilter: "blur(20px)" }}
+                className="pointer-events-auto w-full max-w-xs rounded-3xl border border-border p-8 shadow-2xl bg-card"
               >
-                <h3 className="font-heading italic text-white text-xl mb-2">Delete task?</h3>
-                <p className="text-white/50 text-xs font-body leading-relaxed mb-6">
+                <h3 className="font-heading italic text-foreground text-2xl mb-3">Delete task?</h3>
+                <p className="text-muted-foreground text-sm font-body leading-relaxed mb-8">
                   Are you sure you want to remove this task?
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={(e) => { e.stopPropagation(); setStage("idle"); }}
-                    className="flex-1 cursor-pointer rounded-xl border border-white/10 py-2 text-xs font-semibold text-white/50 hover:text-white hover:bg-white/5 transition-all font-body"
+                    className="flex-1 cursor-pointer rounded-2xl border border-border py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-body"
                   >
                     No
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="flex-1 cursor-pointer rounded-xl py-2 text-xs font-semibold text-white hover:opacity-90 transition-all font-body"
+                    className="flex-1 cursor-pointer rounded-2xl py-3 text-xs font-bold text-white hover:opacity-90 transition-all font-body shadow-lg shadow-red-500/20"
                     style={{ background: "linear-gradient(135deg, #dc2626, #b91c1c)" }}
                   >
                     Delete
