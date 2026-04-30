@@ -50,26 +50,26 @@ export default function LoginPage() {
 
   return (
     <div
-      className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden"
-      style={{ background: "radial-gradient(ellipse at 80% 50%, #0d1a33 0%, #0a0a1a 40%, #000510 100%)" }}
+      className="relative flex min-h-screen items-center justify-center p-4 overflow-hidden bg-background"
+      style={{ background: "radial-gradient(ellipse at 80% 50%, var(--auth-bg-1) 0%, var(--auth-bg-2) 40%, var(--auth-bg-3) 100%)" }}
     >
       {/* Animated ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <motion.div {...fadeIn(0)} className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-25 blur-[120px]" style={{ background: "radial-gradient(circle, #2563eb, transparent 70%)", animation: "orbPulse 8s ease-in-out infinite" }} />
-        <motion.div {...fadeIn(0.3)} className="absolute -bottom-48 -left-24 w-[600px] h-[600px] rounded-full opacity-20 blur-[140px]" style={{ background: "radial-gradient(circle, #7c3aed, transparent 70%)", animation: "orbPulse 10s ease-in-out infinite 2s" }} />
-        <motion.div {...fadeIn(0.6)} className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full opacity-10 blur-[80px]" style={{ background: "radial-gradient(circle, #06b6d4, transparent 70%)", animation: "orbPulse 12s ease-in-out infinite 4s" }} />
+        <motion.div {...fadeIn(0)} className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px]" style={{ background: "radial-gradient(circle, var(--auth-orb-2), transparent 70%)", animation: "orbPulse 8s ease-in-out infinite" }} />
+        <motion.div {...fadeIn(0.3)} className="absolute -bottom-48 -left-24 w-[600px] h-[600px] rounded-full blur-[140px]" style={{ background: "radial-gradient(circle, var(--auth-orb-1), transparent 70%)", animation: "orbPulse 10s ease-in-out infinite 2s" }} />
+        <motion.div {...fadeIn(0.6)} className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full blur-[80px]" style={{ background: "radial-gradient(circle, var(--auth-orb-3), transparent 70%)", animation: "orbPulse 12s ease-in-out infinite 4s" }} />
       </div>
 
       {/* Grid overlay */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.05] dark:opacity-[0.03]" style={{ backgroundImage: "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
       {/* Back to home */}
       <motion.div {...fadeIn(0.1)} className="absolute top-6 left-6 z-20">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/15 bg-white/5 backdrop-blur-md group-hover:bg-white/10 transition-colors">
-            <span className="font-heading italic text-white text-lg leading-none">e</span>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center border border-foreground/15 bg-foreground/5 backdrop-blur-md group-hover:bg-foreground/10 transition-colors">
+            <span className="font-heading italic text-foreground text-lg leading-none">e</span>
           </div>
-          <span className="text-white/50 text-xs font-body tracking-wider group-hover:text-white/80 transition-colors hidden sm:block">ethara</span>
+          <span className="text-foreground/50 text-xs font-body tracking-wider group-hover:text-foreground/80 transition-colors hidden sm:block">ethara</span>
         </Link>
       </motion.div>
 
@@ -87,19 +87,19 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 32, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-          className="relative rounded-[1.75rem] border border-white/10 p-8 md:p-10"
-          style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
+          className="relative rounded-[1.75rem] border border-foreground/10 p-8 md:p-10 shadow-2xl"
+          style={{ background: "linear-gradient(135deg, rgba(var(--glass-base), 0.07) 0%, rgba(var(--glass-base), 0.03) 100%)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
         >
           {/* Header */}
           <div className="text-center mb-8">
-            <motion.div {...fadeUp(0.3)} className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 mb-5">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-white/60 text-[11px] font-body tracking-widest uppercase">Welcome Back</span>
+            <motion.div {...fadeUp(0.3)} className="inline-flex items-center gap-2 bg-foreground/5 border border-foreground/10 rounded-full px-3 py-1 mb-5">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-foreground/60 text-[11px] font-body tracking-widest uppercase">Welcome Back</span>
             </motion.div>
-            <motion.h1 {...fadeUp(0.38)} className="font-heading italic text-white text-4xl md:text-5xl tracking-tight leading-none mb-3">
+            <motion.h1 {...fadeUp(0.38)} className="font-heading italic text-foreground text-4xl md:text-5xl tracking-tight leading-none mb-3">
               Sign in
             </motion.h1>
-            <motion.p {...fadeUp(0.44)} className="text-white/50 text-sm font-body font-light">
+            <motion.p {...fadeUp(0.44)} className="text-foreground/50 text-sm font-body font-light">
               Continue to your Ethara workspace
             </motion.p>
           </div>
@@ -107,30 +107,30 @@ export default function LoginPage() {
           {/* Form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <motion.div {...fadeUp(0.5)} className="space-y-1.5">
-              <label className="block text-[11px] font-body font-semibold text-white/50 uppercase tracking-[0.1em]">Email address</label>
+              <label className="block text-[11px] font-body font-semibold text-foreground/50 uppercase tracking-[0.1em]">Email address</label>
               <input
                 id="email" name="email" type="email" required autoComplete="email"
-                className="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/25 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-body"
+                className="block w-full rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-sm text-foreground placeholder-foreground/25 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-body"
                 placeholder="you@example.com"
               />
             </motion.div>
 
             <motion.div {...fadeUp(0.56)} className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-body font-semibold text-white/50 uppercase tracking-[0.1em]">Password</label>
-                <Link href="#" className="text-[11px] text-blue-400/70 hover:text-blue-400 transition-colors font-body">Forgot?</Link>
+                <label className="block text-[11px] font-body font-semibold text-foreground/50 uppercase tracking-[0.1em]">Password</label>
+                <Link href="#" className="text-[11px] text-blue-500/70 hover:text-blue-500 transition-colors font-body">Forgot?</Link>
               </div>
               <input
                 id="password" name="password" type="password" required autoComplete="current-password"
-                className="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/25 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-body"
+                className="block w-full rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-sm text-foreground placeholder-foreground/25 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-body"
                 placeholder="••••••••"
               />
             </motion.div>
 
             {error && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5">
-                <svg className="w-4 h-4 text-red-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                <span className="text-sm text-red-400 font-body">{error}</span>
+                <svg className="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                <span className="text-sm text-red-500 font-body">{error}</span>
               </motion.div>
             )}
 
@@ -154,14 +154,14 @@ export default function LoginPage() {
           </form>
 
           <motion.div {...fadeUp(0.68)} className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/30 text-xs font-body">or</span>
-            <div className="flex-1 h-px bg-white/8" />
+            <div className="flex-1 h-px bg-foreground/10" />
+            <span className="text-foreground/30 text-xs font-body">or</span>
+            <div className="flex-1 h-px bg-foreground/10" />
           </motion.div>
 
-          <motion.p {...fadeUp(0.72)} className="text-center text-sm text-white/40 font-body">
+          <motion.p {...fadeUp(0.72)} className="text-center text-sm text-foreground/40 font-body">
             New to Ethara?{" "}
-            <Link href="/signup" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+            <Link href="/signup" className="text-blue-500 hover:text-blue-600 transition-colors font-medium">
               Create an account →
             </Link>
           </motion.p>
