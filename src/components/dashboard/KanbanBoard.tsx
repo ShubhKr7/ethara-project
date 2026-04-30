@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -19,9 +19,10 @@ import {
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { updateTaskStatus, createTask } from "@/lib/actions/task.actions";
+import { updateTaskStatus, createTask, updateTask } from "@/lib/actions/task.actions";
 import { DeleteTaskButton } from "@/components/dashboard/DeleteTaskButton";
 import { TaskStatus, TaskPriority } from "@prisma/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Member = { id: string; name: string | null; image: string | null };
 type Task = {
@@ -40,11 +41,139 @@ const COLUMNS: { id: TaskStatus; label: string; border: string; dot: string; bg:
   { id: "DONE",        label: "Done",        border: "border-green-400/20", dot: "bg-green-400",  bg: "bg-green-400/5"  },
 ];
 
-const PRIORITY_STYLES: Record<TaskPriority, { label: string; cls: string }> = {
-  LOW:    { label: "Low",    cls: "text-blue-600  bg-blue-500/10  border-blue-500/20"  },
-  MEDIUM: { label: "Medium", cls: "text-amber-600 bg-amber-500/10 border-amber-500/20" },
-  HIGH:   { label: "High",   cls: "text-red-600   bg-red-500/10   border-red-500/20"   },
+const PRIORITY_STYLES: Record<TaskPriority, { label: string; cls: string; activeCls: string }> = {
+  LOW:    { label: "Low",    cls: "text-blue-600  bg-blue-500/10  border-blue-500/20", activeCls: "bg-blue-500 text-white shadow-lg shadow-blue-500/30"  },
+  MEDIUM: { label: "Medium", cls: "text-amber-600 bg-amber-500/10 border-amber-500/20", activeCls: "bg-amber-500 text-white shadow-lg shadow-amber-500/30" },
+  HIGH:   { label: "High",   cls: "text-red-600   bg-red-500/10   border-red-500/20", activeCls: "bg-red-500 text-white shadow-lg shadow-red-500/30"   },
 };
+
+/* ─────────────────────────────────────────────
+   Task Detail Drawer
+───────────────────────────────────────────── */
+function TaskDetailDrawer({
+  task, projectId, members, onClose
+}: {
+  task: Task; projectId: string; members: { userId: string; user: Member }[]; onClose: () => void;
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
+  const [priority, setPriority] = useState(task.priority);
+  const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "");
+  const [isPending, startTransition] = useTransition();
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+
+  const save = (updates: any) => {
+    setSaveState("saving");
+    startTransition(async () => {
+      try {
+        await updateTask(task.id, { ...updates, projectId });
+        setSaveState("saved");
+        setTimeout(() => setSaveState("idle"), 2000);
+      } catch (err) {
+        setSaveState("idle");
+      }
+    });
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+      />
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="fixed top-0 right-0 h-full w-full max-w-lg bg-card border-l border-border shadow-2xl z-[70] flex flex-col"
+      >
+        <div className="p-8 flex-1 overflow-y-auto custom-scrollbar space-y-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Task Details</span>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => save({ title })}
+              className="w-full bg-transparent font-heading italic text-foreground text-4xl tracking-tight outline-none border-b-2 border-transparent focus:border-primary/20 transition-all pb-2"
+              placeholder="Task Title"
+            />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
+              <span>Last updated {new Date().toLocaleDateString()}</span>
+              {saveState !== "idle" && (
+                <span className={`transition-all font-bold uppercase tracking-widest ml-2 ${saveState === "saving" ? "animate-pulse text-primary" : "text-green-500"}`}>
+                  {saveState === "saving" ? "• Saving…" : "• Saved"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Priority Level</label>
+              <div className="flex gap-2">
+                {(Object.keys(PRIORITY_STYLES) as TaskPriority[]).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => { setPriority(p); save({ priority: p }); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                      priority === p ? PRIORITY_STYLES[p].activeCls : "border-border text-muted-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    {PRIORITY_STYLES[p].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Due Date</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => { setDueDate(e.target.value); save({ dueDate: e.target.value || null }); }}
+                className="w-full rounded-2xl border border-border bg-background px-5 py-3.5 text-sm text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onBlur={() => save({ description })}
+                rows={6}
+                placeholder="Add more details about this task…"
+                className="w-full rounded-2xl border border-border bg-background px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body leading-relaxed transition-all resize-none placeholder-muted-foreground/30"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-8 bg-muted/20 border-t border-border">
+          <button 
+            onClick={onClose}
+            className="w-full py-4 rounded-2xl font-bold text-sm bg-foreground text-background hover:opacity-90 transition-all shadow-xl"
+          >
+            Done Editing
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
 
 /* ─────────────────────────────────────────────
    Droppable column zone
@@ -72,11 +201,13 @@ function TaskCard({
   task, 
   projectId, 
   onDelete,
+  onEdit,
   overlay = false 
 }: { 
   task: Task; 
   projectId: string; 
   onDelete?: (id: string) => void;
+  onEdit?: (task: Task) => void;
   overlay?: boolean 
 }) {
   const {
@@ -98,6 +229,7 @@ function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
+      onClick={() => !isDragging && onEdit?.(task)}
       className={`group rounded-2xl border border-border bg-card p-5 cursor-grab active:cursor-grabbing
         hover:border-primary/30 hover:shadow-lg transition-all select-none shadow-sm
         ${overlay ? "shadow-2xl rotate-[1.5deg] border-primary/40 bg-card ring-2 ring-primary/10" : ""}`}
@@ -105,11 +237,13 @@ function TaskCard({
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-sm font-body text-foreground font-bold leading-snug flex-1 group-hover:text-primary transition-colors">{task.title}</p>
         {!overlay && (
-          <DeleteTaskButton 
-            taskId={task.id} 
-            projectId={projectId} 
-            onDeleteSuccess={() => onDelete?.(task.id)} 
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <DeleteTaskButton 
+              taskId={task.id} 
+              projectId={projectId} 
+              onDeleteSuccess={() => onDelete?.(task.id)} 
+            />
+          </div>
         )}
       </div>
 
@@ -225,6 +359,7 @@ export function KanbanBoard({
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [overColumnId, setOverColumnId] = useState<TaskStatus | null>(null);
   const [addingTo, setAddingTo] = useState<TaskStatus | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -322,6 +457,7 @@ export function KanbanBoard({
                       task={task} 
                       projectId={projectId} 
                       onDelete={handleTaskDelete}
+                      onEdit={setEditingTask}
                     />
                   ))}
                 </DroppableColumn>
@@ -359,6 +495,17 @@ export function KanbanBoard({
           />
         )}
       </DragOverlay>
+
+      <AnimatePresence>
+        {editingTask && (
+          <TaskDetailDrawer
+            task={editingTask}
+            projectId={projectId}
+            members={members}
+            onClose={() => setEditingTask(null)}
+          />
+        )}
+      </AnimatePresence>
     </DndContext>
   );
 }
