@@ -5,9 +5,10 @@ import { EditableProjectHeader } from "@/components/dashboard/EditableProjectHea
 import { auth } from "@/auth";
 import Link from "next/link";
 
-export default async function ProjectBoardPage({ params }: { params: { id: string } }) {
+export default async function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  const project = await getProjectById(params.id);
+  const id = (await params).id;
+  const project = await getProjectById(id);
   const isOwner = project.ownerId === session?.user?.id;
 
   return (

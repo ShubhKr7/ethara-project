@@ -75,6 +75,11 @@ export async function getMyProjects() {
 export async function getProjectById(id: string) {
   const session = await getSession();
 
+  if (!id) {
+    console.error("getProjectById called without an ID");
+    redirect("/dashboard/projects");
+  }
+
   const project = await prisma.project.findFirst({
     where: {
       id,
