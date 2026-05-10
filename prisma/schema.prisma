@@ -7,6 +7,7 @@ datasource db {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   MEMBER
 }
@@ -24,29 +25,65 @@ enum TaskPriority {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String?         @unique
-  password      String?
-  role          UserRole        @default(MEMBER)
-  image         String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  ownedProjects Project[]       @relation("ProjectOwner")
-  memberships   ProjectMember[]
-  assignedTasks Task[]          @relation("TaskAssignee")
+  id                String             @id @default(cuid())
+  name              String?
+  email             String?            @unique
+  password          String?
+  role              UserRole           @default(MEMBER)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // Organizations owned by this user (if Admin)
+  ownedOrganizations Organization[]    @relation("OrgAdmin")
+  
+  // Organizations this user has joined
+  orgMemberships    OrgMember[]
+  
+  // Project-specific memberships and tasks
+  projectMemberships ProjectMember[]
+  assignedTasks      Task[]            @relation("TaskAssignee")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  joinCode  String   @unique // The unique code people use to join
+  adminId   String
+  admin     User     @relation("OrgAdmin", fields: [adminId], references: [id])
+  
+  members   OrgMember[]
+  projects  Project[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Join table for Users and Organizations
+model OrgMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
 }
 
 model Project {
-  id          String          @id @default(cuid())
-  name        String
-  description String?
-  ownerId     String
-  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  members     ProjectMember[]
-  tasks       Task[]
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  
+  // Every project must belong to an Organization
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  members        ProjectMember[]
+  tasks          Task[]
 }
 
 model ProjectMember {
@@ -68,10 +105,13 @@ model Task {
   status      TaskStatus   @default(TODO)
   priority    TaskPriority @default(MEDIUM)
   dueDate     DateTime?
+  
   projectId   String
-  assigneeId  String?
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assigneeId  String?
   assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }

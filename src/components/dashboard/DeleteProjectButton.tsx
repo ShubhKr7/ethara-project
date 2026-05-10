@@ -4,10 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { deleteProject } from "@/lib/actions/project.actions";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type Stage = "idle" | "confirming" | "loading" | "success";
 
-export function DeleteProjectButton({ projectId }: { projectId: string }) {
+export function DeleteProjectButton({ projectId, redirectUrl = "/dashboard/projects" }: { projectId: string, redirectUrl?: string }) {
   const [stage, setStage] = useState<Stage>("idle");
   const router = useRouter();
 
@@ -16,9 +17,10 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
     try {
       await deleteProject(projectId);
       setStage("success");
-      setTimeout(() => router.push("/dashboard/projects"), 1400);
+      setTimeout(() => router.push(redirectUrl), 1400);
     } catch {
       setStage("idle");
+      toast.error("Failed to delete project");
     }
   };
 

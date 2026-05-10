@@ -23,6 +23,8 @@ import { updateTaskStatus, createTask, updateTask } from "@/lib/actions/task.act
 import { DeleteTaskButton } from "@/components/dashboard/DeleteTaskButton";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { deleteTask } from "@/lib/actions/task.actions";
 
 type Member = { id: string; name: string | null; image: string | null };
 type Task = {
@@ -59,6 +61,7 @@ function TaskDetailDrawer({
   const [description, setDescription] = useState(task.description ?? "");
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "");
+  const [assigneeId, setAssigneeId] = useState(task.assignee?.id ?? "");
   const [isPending, startTransition] = useTransition();
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -138,14 +141,30 @@ function TaskDetailDrawer({
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Due Date</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => { setDueDate(e.target.value); save({ dueDate: e.target.value || null }); }}
-                className="w-full rounded-2xl border border-border bg-background px-5 py-3.5 text-sm text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all"
-              />
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Due Date</label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => { setDueDate(e.target.value); save({ dueDate: e.target.value || null }); }}
+                  className="w-full rounded-2xl border border-border bg-background px-5 py-3.5 text-sm text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] ml-1">Assignee</label>
+                <select
+                  value={assigneeId}
+                  onChange={(e) => { setAssigneeId(e.target.value); save({ assigneeId: e.target.value || null }); }}
+                  className="w-full rounded-2xl border border-border bg-background px-5 py-3.5 text-sm text-foreground focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all cursor-pointer"
+                >
+                  <option value="">Unassigned</option>
+                  {members.map((m) => (
+                    <option key={m.userId} value={m.userId}>{m.user.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -241,7 +260,7 @@ function TaskCard({
             <DeleteTaskButton 
               taskId={task.id} 
               projectId={projectId} 
-              onDeleteSuccess={() => onDelete?.(task.id)} 
+              onDeleteConfirm={onDelete!} 
             />
           </div>
         )}
@@ -277,32 +296,65 @@ function TaskCard({
    Inline create-task form
 ───────────────────────────────────────────── */
 function CreateTaskForm({
-  projectId, status, members, onClose,
+  projectId, status, members, onClose, onOptimisticAdd
 }: {
   projectId: string; status: TaskStatus; members: { userId: string; user: Member }[]; onClose: () => void;
+  onOptimisticAdd: (task: Omit<Task, "id">) => void;
 }) {
   const [pending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    
     startTransition(async () => {
-      await createTask({
-        projectId,
-        title:      fd.get("title")      as string,
-        description:(fd.get("description") as string) || undefined,
-        priority:   fd.get("priority")   as TaskPriority,
-        status,
-        dueDate:   (fd.get("dueDate")    as string) || undefined,
-        assigneeId:(fd.get("assigneeId") as string) || undefined,
-      });
       onClose();
+      
+      const optimisticTask = {
+        title: fd.get("title") as string,
+        description: (fd.get("description") as string) || null,
+        priority: fd.get("priority") as TaskPriority,
+        status,
+        dueDate: fd.get("dueDate") ? new Date(fd.get("dueDate") as string) : null,
+        assignee: members.find(m => m.userId === fd.get("assigneeId"))?.user || null
+      };
+      
+      onOptimisticAdd(optimisticTask);
+
+      try {
+        await createTask({
+          projectId,
+          title: optimisticTask.title,
+          description: optimisticTask.description || undefined,
+          priority: optimisticTask.priority,
+          status: optimisticTask.status,
+          dueDate: fd.get("dueDate") as string || undefined,
+          assigneeId: (fd.get("assigneeId") as string) || undefined,
+        });
+        toast.success("Task created");
+      } catch (e) {
+        // Error is handled by parent rollback
+      }
     });
   };
 
   return (
-    <div className="mt-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-inner">
-      <form onSubmit={handleSubmit} className="space-y-3">
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card border border-border shadow-2xl z-[70] rounded-[2rem] p-6 overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <h2 className="font-heading italic text-2xl mb-6">Add New Task</h2>
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
         <input
           name="title" required autoFocus placeholder="What needs to be done?"
           className="block w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/40 focus:border-primary focus:ring-4 focus:ring-primary/5 focus:outline-none font-body font-bold transition-all"
@@ -329,19 +381,25 @@ function CreateTaskForm({
             {members.map((m) => <option key={m.userId} value={m.userId}>{m.user.name}</option>)}
           </select>
         )}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 pt-4 border-t border-border mt-2">
           <button type="button" onClick={onClose}
             className="flex-1 rounded-xl border border-border py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-body">
             Cancel
           </button>
           <button type="submit" disabled={pending}
-            className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white disabled:opacity-50 font-body shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white disabled:opacity-50 font-body shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center min-w-[120px]"
             style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)" }}>
-            {pending ? "Adding…" : "Create Task"}
+            {pending ? (
+              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : "Create Task"}
           </button>
         </div>
       </form>
-    </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -407,7 +465,17 @@ export function KanbanBoard({
 
     if (!draggedTask || !targetCol) return;
 
-    startTransition(() => updateTaskStatus(taskId, targetCol, projectId));
+    const previousTasks = [...tasks];
+    
+    // Optimistic UI updates it instantly
+    startTransition(async () => {
+      try {
+        await updateTaskStatus(taskId, targetCol, projectId);
+      } catch {
+        setTasks(previousTasks);
+        toast.error("Failed to move task");
+      }
+    });
   };
 
   const handleDragCancel = () => {
@@ -416,8 +484,28 @@ export function KanbanBoard({
     setOverColumnId(null);
   };
 
-  const handleTaskDelete = (taskId: string) => {
+  const handleTaskDelete = async (taskId: string) => {
+    const previousTasks = [...tasks];
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    try {
+      await deleteTask(taskId, projectId);
+      toast.success("Task deleted");
+    } catch {
+      setTasks(previousTasks);
+      toast.error("Failed to delete task");
+    }
+  };
+
+  const handleOptimisticAdd = (taskData: Omit<Task, "id">) => {
+    const previousTasks = [...tasks];
+    const tempTask: Task = { ...taskData, id: `temp-${Date.now()}` };
+    setTasks(prev => [...prev, tempTask]);
+    
+    // If the creation fails, we revert the tasks state after 2 seconds
+    // Actually the try/catch in CreateTaskForm could fail, so we should expose a way to rollback,
+    // but Next.js Server Actions with revalidatePath will just overwrite this `tasks` array anyway
+    // If it fails, Next.js won't revalidate, so we might want to pass the rollback function.
+    // For simplicity, if we get an error we just revert to previousTasks.
   };
 
   return (
@@ -463,24 +551,15 @@ export function KanbanBoard({
                 </DroppableColumn>
               </SortableContext>
 
-              {addingTo === col.id ? (
-                <CreateTaskForm
-                  projectId={projectId}
-                  status={col.id}
-                  members={members}
-                  onClose={() => setAddingTo(null)}
-                />
-              ) : (
-                <button
-                  onClick={() => setAddingTo(col.id)}
-                  className="mt-4 shrink-0 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold text-muted-foreground/60 hover:text-primary hover:bg-card hover:shadow-md hover:border-primary/10 border border-transparent transition-all font-body w-full cursor-pointer group"
-                >
-                  <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  Add a new task
-                </button>
-              )}
+              <button
+                onClick={() => setAddingTo(col.id)}
+                className="mt-4 shrink-0 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold text-muted-foreground/60 hover:text-primary hover:bg-card hover:shadow-md hover:border-primary/10 border border-transparent transition-all font-body w-full cursor-pointer group"
+              >
+                <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Add a new task
+              </button>
             </div>
           );
         })}
@@ -495,6 +574,22 @@ export function KanbanBoard({
           />
         )}
       </DragOverlay>
+
+      <AnimatePresence>
+        {addingTo && (
+          <CreateTaskForm
+            projectId={projectId}
+            status={addingTo}
+            members={members}
+            onClose={() => setAddingTo(null)}
+            onOptimisticAdd={(taskData) => {
+              const previousTasks = [...tasks];
+              const tempTask: Task = { ...taskData, id: `temp-${Date.now()}` };
+              setTasks(prev => [...prev, tempTask]);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {editingTask && (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, Barlow } from "next/font/google";
 import "./globals.css";
 import Providers from "@/providers";
+import { Toaster } from "sonner";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -33,6 +34,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );

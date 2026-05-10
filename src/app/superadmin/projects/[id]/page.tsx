@@ -1,21 +1,29 @@
-import { getProjectById } from "@/lib/actions/project.actions";
+import { getSuperAdminProjectById } from "@/lib/actions/superadmin.actions";
 import { KanbanBoard } from "@/components/dashboard/KanbanBoard";
 import { DeleteProjectButton } from "@/components/dashboard/DeleteProjectButton";
 import { EditableProjectHeader } from "@/components/dashboard/EditableProjectHeader";
-import { AssignMemberModal } from "@/components/dashboard/AssignMemberModal";
 import { auth } from "@/auth";
-import { getOrganizationMembers } from "@/lib/actions/project.actions";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default async function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SuperAdminProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
+  if (session?.user?.role !== "SUPER_ADMIN") redirect("/dashboard");
+  
   const id = (await params).id;
-  const project = await getProjectById(id);
-  const isOwner = project.members.some(m => m.userId === session?.user?.id && m.role === "ADMIN") || session?.user?.role === "SUPER_ADMIN";
-  const orgMembers = isOwner ? await getOrganizationMembers() : [];
+  const project = await getSuperAdminProjectById(id);
 
   return (
-    <div className="p-8 md:p-10 h-full flex flex-col bg-background transition-colors duration-300">
+    <div className="p-8 md:p-10 h-full flex flex-col bg-background transition-colors duration-300 min-h-screen">
+      <div className="mb-6">
+        <Link href={`/superadmin/organizations/${project.organizationId}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Organization
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between mb-10 gap-6 shrink-0">
         <div className="flex-1 min-w-0">
@@ -37,18 +45,11 @@ export default async function ProjectBoardPage({ params }: { params: Promise<{ i
                 {m.user.name?.[0]?.toUpperCase() ?? "?"}
               </div>
             ))}
-            {isOwner && (
-              <AssignMemberModal 
-                projectId={project.id} 
-                orgMembers={orgMembers} 
-                projectMembers={project.members} 
-              />
-            )}
           </div>
           <div className="rounded-2xl border border-border bg-card px-4 py-2 text-xs text-muted-foreground font-bold uppercase tracking-widest shadow-sm">
             {project.tasks.length} task{project.tasks.length !== 1 ? "s" : ""}
           </div>
-          {isOwner && <DeleteProjectButton projectId={project.id} />}
+          <DeleteProjectButton projectId={project.id} redirectUrl={`/superadmin/organizations/${project.organizationId}`} />
         </div>
       </div>
 

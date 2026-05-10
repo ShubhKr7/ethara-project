@@ -18,11 +18,19 @@ export async function createProject(formData: FormData) {
 
   if (!name?.trim()) throw new Error("Project name is required");
 
+  const orgMember = await prisma.orgMember.findFirst({
+    where: { userId: session.user.id },
+  });
+
+  if (!orgMember) {
+    throw new Error("You must belong to an organization to create a project.");
+  }
+
   const project = await prisma.project.create({
     data: {
       name: name.trim(),
       description: description?.trim() || null,
-      ownerId: session.user.id,
+      organizationId: orgMember.organizationId,
       members: {
         create: {
           userId: session.user.id,
@@ -63,7 +71,6 @@ export async function getMyProjects() {
       members: { some: { userId: session.user.id } },
     },
     include: {
-      owner: { select: { id: true, name: true, image: true } },
       members: { include: { user: { select: { id: true, name: true, image: true } } } },
       tasks: { select: { status: true } },
       _count: { select: { tasks: true } },
@@ -86,7 +93,6 @@ export async function getProjectById(id: string) {
       members: { some: { userId: session.user.id } },
     },
     include: {
-      owner: { select: { id: true, name: true, image: true } },
       members: {
         include: { user: { select: { id: true, name: true, image: true } } },
       },
@@ -107,10 +113,106 @@ export async function deleteProject(id: string) {
   const session = await getSession();
 
   await prisma.project.deleteMany({
-    where: { id, ownerId: session.user.id },
+    where: { 
+      id, 
+      members: { some: { userId: session.user.id, role: "ADMIN" } } 
+    },
   });
 
   revalidatePath("/dashboard", "layout");
   // Return success — client will animate then redirect
   return { success: true };
+}
+
+export async function getOrganizationMembers() {
+  const session = await getSession();
+  
+  const orgMember = await prisma.orgMember.findFirst({
+    where: { userId: session.user.id },
+    include: {
+      organization: {
+        include: {
+          members: {
+            include: { user: { select: { id: true, name: true, email: true, role: true } } }
+          }
+        }
+      }
+    }
+  });
+
+  if (!orgMember) return [];
+  return orgMember.organization.members;
+}
+
+export async function assignUserToProject(projectId: string, userId: string) {
+  const session = await getSession();
+
+  // Verify the current user is an ADMIN of the project
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      members: { some: { userId: session.user.id, role: "ADMIN" } }
+    }
+  });
+
+  if (!project) throw new Error("Unauthorized");
+
+  // Check if user is already in project
+  const existingMember = await prisma.projectMember.findUnique({
+    where: {
+      projectId_userId: {
+        projectId,
+        userId
+      }
+    }
+  });
+
+  if (!existingMember) {
+    await prisma.projectMember.create({
+      data: {
+        projectId,
+        userId,
+        role: "MEMBER"
+      }
+    });
+  }
+
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath("/dashboard", "layout");
+}
+
+export async function removeUserFromProject(projectId: string, userId: string) {
+  const session = await getSession();
+
+  // Verify the current user is an ADMIN of the project
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      members: { some: { userId: session.user.id, role: "ADMIN" } }
+    }
+  });
+
+  if (!project) throw new Error("Unauthorized to remove members from this project");
+
+  // Prevent admin from removing themselves if they are the only admin
+  if (session.user.id === userId) {
+    const adminCount = await prisma.projectMember.count({
+      where: { projectId, role: "ADMIN" }
+    });
+    if (adminCount <= 1) {
+      throw new Error("Cannot remove the only admin from the project");
+    }
+  }
+
+  await prisma.projectMember.delete({
+    where: {
+      projectId_userId: {
+        projectId,
+        userId
+      }
+    }
+  });
+
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath("/dashboard", "layout");
 }

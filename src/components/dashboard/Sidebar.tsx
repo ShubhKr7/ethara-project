@@ -58,6 +58,28 @@ export function Sidebar({ user, projects }: SidebarProps) {
           )}
         </Link>
 
+        {/* Team Link (Admin Only) */}
+        {user?.role === "ADMIN" && (
+          <Link
+            href="/dashboard/team"
+            className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-body font-bold transition-all group relative overflow-hidden ${
+              pathname === "/dashboard/team"
+                ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:text-foreground hover:bg-card/40"
+            }`}
+          >
+            <span className={`transition-colors ${pathname === "/dashboard/team" ? "text-primary" : "text-muted-foreground/50 group-hover:text-muted-foreground"}`}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </span>
+            Team
+            {pathname === "/dashboard/team" && (
+              <motion.div layoutId="nav-glow" className="absolute inset-0 bg-primary/5 pointer-events-none" />
+            )}
+          </Link>
+        )}
+
         {/* Projects Main Link + Toggle */}
         <div className="space-y-1">
           <div className={`group flex items-center rounded-2xl transition-all relative overflow-hidden ${

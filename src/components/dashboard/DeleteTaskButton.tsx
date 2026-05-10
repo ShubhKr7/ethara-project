@@ -2,33 +2,22 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { deleteTask } from "@/lib/actions/task.actions";
 
 type Stage = "idle" | "confirming" | "loading" | "success";
 
 interface DeleteTaskButtonProps {
   taskId: string;
   projectId: string;
-  onDeleteSuccess: () => void;
+  onDeleteConfirm: (taskId: string) => void;
 }
 
-export function DeleteTaskButton({ taskId, projectId, onDeleteSuccess }: DeleteTaskButtonProps) {
+export function DeleteTaskButton({ taskId, onDeleteConfirm }: DeleteTaskButtonProps) {
   const [stage, setStage] = useState<Stage>("idle");
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setStage("loading");
-    try {
-      await deleteTask(taskId, projectId);
-      setStage("success");
-      // Show success for a short time then remove from UI
-      setTimeout(() => {
-        onDeleteSuccess();
-        setStage("idle");
-      }, 1000);
-    } catch {
-      setStage("idle");
-    }
+    setStage("idle");
+    onDeleteConfirm(taskId);
   };
 
   return (
