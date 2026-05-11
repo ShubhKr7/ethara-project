@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { updateProfile } from "@/lib/actions/user.actions";
+import { updateProfile, forceLogout } from "@/lib/actions/user.actions";
 import { motion, AnimatePresence, type HTMLMotionProps } from "framer-motion";
 
 const fadeUp = (delay = 0): HTMLMotionProps<"div"> => ({
@@ -153,7 +152,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
+            onClick={() => forceLogout()}
             className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-red-500 text-white font-body font-bold text-sm hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 cursor-pointer"
           >
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
