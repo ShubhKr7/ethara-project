@@ -1,10 +1,9 @@
 "use server";
 
 import { auth } from "@/auth";
+import { signOut } from "next-auth/react";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 export async function updateProfile(data: { name: string }) {
   const session = await auth();
@@ -32,10 +31,5 @@ export async function updateProfile(data: { name: string }) {
 }
 
 export async function forceLogout() {
-  const cookieStore = await cookies();
-  cookieStore.delete("next-auth.session-token");
-  cookieStore.delete("__Secure-next-auth.session-token");
-  cookieStore.delete("authjs.session-token");
-  cookieStore.delete("__Secure-authjs.session-token");
-  redirect("/login");
+  await signOut({ redirectTo: "/login" });
 }
