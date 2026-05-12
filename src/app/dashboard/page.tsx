@@ -20,6 +20,7 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login");
 
   const firstName = session.user.name?.split(" ")[0] ?? "there";
+  const isAdmin = session.user.role === "ADMIN";
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -38,28 +39,31 @@ export default async function DashboardPage() {
         <DashboardStats />
       </Suspense>
 
-      {/* Task Analytics */}
-      <div className="mb-6">
-        <h2 className="text-foreground font-body font-semibold text-lg">Task Analytics</h2>
-        <p className="text-muted-foreground text-sm font-body mt-0.5">Across all your projects</p>
-      </div>
+      {/* Task Analytics — Admin only */}
+      {isAdmin && (
+        <>
+          <div className="mb-6">
+            <h2 className="text-foreground font-body font-semibold text-lg">Task Analytics</h2>
+            <p className="text-muted-foreground text-sm font-body mt-0.5">Across all your projects</p>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <Suspense fallback={<TaskStatusSkeleton />}>
-          <TaskStatusBreakdown />
-        </Suspense>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <Suspense fallback={<TaskStatusSkeleton />}>
+              <TaskStatusBreakdown />
+            </Suspense>
 
-        <Suspense fallback={<TasksPerUserSkeleton />}>
-          <TasksPerUser />
-        </Suspense>
-      </div>
+            <Suspense fallback={<TasksPerUserSkeleton />}>
+              <TasksPerUser />
+            </Suspense>
+          </div>
 
-      {/* Overdue Tasks */}
-      <div className="mb-10">
-        <Suspense fallback={<OverdueTasksSkeleton />}>
-          <OverdueTasks />
-        </Suspense>
-      </div>
+          <div className="mb-10">
+            <Suspense fallback={<OverdueTasksSkeleton />}>
+              <OverdueTasks />
+            </Suspense>
+          </div>
+        </>
+      )}
 
       {/* Recent Projects */}
       <div className="mb-6 flex items-center justify-between">
