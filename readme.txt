@@ -108,3 +108,25 @@ graph TD
 - `npm run build`: Generates the Prisma client and builds the application for production.
 - `npm run start`: Starts the production server.
 - `npm run lint`: Runs ESLint to check for code issues.
+
+---
+
+## 🔑 Demo Accounts
+
+Use the following pre-seeded credentials to explore the application across different permission levels. All accounts use the same password.
+
+Password for all accounts: 123456
+
+Role          | Email              | Access
+--------------|--------------------|---------------------------------------------------------------
+Superadmin    | j@j.com            | Full platform access — manage all orgs, admins & users (/superadmin)
+Admin         | satya@micro.com    | Org-level access — projects, members, task analytics (/dashboard)
+Member        | elsa@micro.com     | Standard access — assigned projects & Kanban board
+Member        | sam@micro.com      | Standard access — assigned projects & Kanban board
+
+Role Capabilities at a Glance:
+
+- Superadmin (j@j.com)         → Go to /superadmin for the global admin panel.
+- Admin (satya@micro.com)      → Go to /dashboard to see Task Analytics (Tasks by Status,
+                                  Tasks per User, Overdue Tasks) — hidden from Members.
+- Members (elsa, sam @micro.com) → Go to /dashboard to see only their projects & summary stats.
