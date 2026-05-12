@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
-import { signOut } from "next-auth/react";
+import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -31,5 +30,5 @@ export async function updateProfile(data: { name: string }) {
 }
 
 export async function forceLogout() {
-  await signOut({ redirectTo: "/login" });
+  await signOut({ redirectTo: "/login", redirect: true });
 }
