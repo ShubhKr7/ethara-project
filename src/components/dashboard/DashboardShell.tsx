@@ -1,5 +1,6 @@
-import { getMyProjects } from "@/lib/actions/project.actions";
+import { getMyProjects, getDashboardTaskStats } from "@/lib/actions/project.actions";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 export async function DashboardStats() {
   const projects = await getMyProjects();
@@ -106,6 +107,264 @@ export function ProjectsSkeleton() {
       {[1, 2, 3].map((i) => (
         <div key={i} className="h-24 rounded-2xl border border-border bg-muted/20" />
       ))}
+    </div>
+  );
+}
+
+// ─── Task Status Breakdown ────────────────────────────────────────────────────
+
+export async function TaskStatusBreakdown() {
+  const stats = await getDashboardTaskStats();
+  const { byStatus, total } = stats;
+
+  const statuses = [
+    {
+      key: "TODO",
+      label: "To Do",
+      value: byStatus.TODO,
+      color: "bg-slate-400",
+      textColor: "text-slate-400",
+      bg: "bg-slate-400/10",
+      icon: "○",
+    },
+    {
+      key: "IN_PROGRESS",
+      label: "In Progress",
+      value: byStatus.IN_PROGRESS,
+      color: "bg-amber-400",
+      textColor: "text-amber-400",
+      bg: "bg-amber-400/10",
+      icon: "◑",
+    },
+    {
+      key: "DONE",
+      label: "Done",
+      value: byStatus.DONE,
+      color: "bg-emerald-500",
+      textColor: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      icon: "●",
+    },
+  ];
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-body font-semibold text-foreground text-base">Tasks by Status</h2>
+        <span className="text-xs text-muted-foreground font-body">{total} total</span>
+      </div>
+
+      <div className="space-y-4">
+        {statuses.map((s) => {
+          const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
+          return (
+            <div key={s.key}>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className={`text-base leading-none ${s.textColor}`}>{s.icon}</span>
+                  <span className="text-sm font-body text-foreground">{s.label}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold font-heading text-foreground">{s.value}</span>
+                  <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
+                </div>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${s.color} transition-all duration-700`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function TaskStatusSkeleton() {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm animate-pulse">
+      <div className="h-4 bg-muted rounded w-32 mb-6" />
+      <div className="space-y-5">
+        {[1, 2, 3].map((i) => (
+          <div key={i}>
+            <div className="flex justify-between mb-2">
+              <div className="h-3 bg-muted rounded w-20" />
+              <div className="h-3 bg-muted rounded w-8" />
+            </div>
+            <div className="h-2 bg-muted rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tasks per User ───────────────────────────────────────────────────────────
+
+export async function TasksPerUser() {
+  const stats = await getDashboardTaskStats();
+  const { tasksPerUser } = stats;
+
+  if (tasksPerUser.length === 0) {
+    return (
+      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="font-body font-semibold text-foreground text-base mb-4">Tasks per User</h2>
+        <p className="text-muted-foreground text-sm font-body">No assigned tasks yet.</p>
+      </div>
+    );
+  }
+
+  const maxCount = tasksPerUser[0].count;
+
+  const avatarColors = [
+    "from-violet-600 to-blue-600",
+    "from-pink-600 to-rose-600",
+    "from-amber-500 to-orange-600",
+    "from-teal-500 to-cyan-600",
+    "from-indigo-500 to-purple-600",
+    "from-emerald-500 to-green-600",
+  ];
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="font-body font-semibold text-foreground text-base mb-6">Tasks per User</h2>
+      <div className="space-y-4">
+        {tasksPerUser.map((u, i) => {
+          const pct = Math.round((u.count / maxCount) * 100);
+          return (
+            <div key={u.name} className="flex items-center gap-3">
+              <div
+                className={`w-8 h-8 shrink-0 rounded-full bg-gradient-to-br ${avatarColors[i % avatarColors.length]} flex items-center justify-center text-[11px] font-bold text-white shadow-sm`}
+              >
+                {u.name[0]?.toUpperCase() ?? "?"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-body text-foreground truncate">{u.name}</span>
+                  <span className="text-sm font-bold font-heading text-foreground ml-2 shrink-0">
+                    {u.count}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-violet-600 to-blue-500 transition-all duration-700"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function TasksPerUserSkeleton() {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm animate-pulse">
+      <div className="h-4 bg-muted rounded w-28 mb-6" />
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-muted shrink-0" />
+            <div className="flex-1">
+              <div className="flex justify-between mb-1.5">
+                <div className="h-3 bg-muted rounded w-24" />
+                <div className="h-3 bg-muted rounded w-6" />
+              </div>
+              <div className="h-1.5 bg-muted rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Overdue Tasks ────────────────────────────────────────────────────────────
+
+export async function OverdueTasks() {
+  const stats = await getDashboardTaskStats();
+  const { overdueTasks } = stats;
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-body font-semibold text-foreground text-base">Overdue Tasks</h2>
+        {overdueTasks.length > 0 && (
+          <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2.5 py-1 rounded-full">
+            {overdueTasks.length} overdue
+          </span>
+        )}
+      </div>
+
+      {overdueTasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-2xl mb-3">
+            ✓
+          </div>
+          <p className="text-sm text-muted-foreground font-body">No overdue tasks. You&apos;re on track!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {overdueTasks.map((task) => {
+            const overdueSince = formatDistanceToNow(new Date(task.dueDate), {
+              addSuffix: true,
+            });
+            return (
+              <div
+                key={task.id}
+                className="flex items-start gap-3 p-3 rounded-xl bg-rose-500/5 border border-rose-500/15 hover:border-rose-500/30 transition-colors group"
+              >
+                <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-body font-medium text-foreground truncate group-hover:text-rose-400 transition-colors">
+                    {task.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground font-body truncate">
+                      {task.projectName}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">·</span>
+                    <span className="text-[11px] text-rose-400 font-body shrink-0">
+                      Due {overdueSince}
+                    </span>
+                  </div>
+                </div>
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+                    task.status === "IN_PROGRESS"
+                      ? "bg-amber-400/10 text-amber-400"
+                      : "bg-slate-400/10 text-slate-400"
+                  }`}
+                >
+                  {task.status === "IN_PROGRESS" ? "In Progress" : "To Do"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function OverdueTasksSkeleton() {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm animate-pulse">
+      <div className="flex justify-between mb-6">
+        <div className="h-4 bg-muted rounded w-28" />
+        <div className="h-5 bg-muted rounded-full w-16" />
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-muted/50 rounded-xl" />
+        ))}
+      </div>
     </div>
   );
 }

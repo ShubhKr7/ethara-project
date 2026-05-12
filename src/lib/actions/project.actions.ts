@@ -181,6 +181,78 @@ export async function assignUserToProject(projectId: string, userId: string) {
   revalidatePath("/dashboard", "layout");
 }
 
+export async function getDashboardTaskStats() {
+  const session = await getSession();
+  const now = new Date();
+
+  const projects = await prisma.project.findMany({
+    where: {
+      members: { some: { userId: session.user.id } },
+    },
+    select: {
+      name: true,
+      tasks: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          dueDate: true,
+          assignee: { select: { id: true, name: true } },
+        },
+      },
+    },
+  });
+
+  const allTasks = projects.flatMap((p) =>
+    p.tasks.map((t) => ({ ...t, projectName: p.name }))
+  );
+
+  const byStatus = {
+    TODO: allTasks.filter((t) => t.status === "TODO").length,
+    IN_PROGRESS: allTasks.filter((t) => t.status === "IN_PROGRESS").length,
+    DONE: allTasks.filter((t) => t.status === "DONE").length,
+  };
+
+  const overdueTasks = allTasks
+    .filter(
+      (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "DONE"
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime()
+    )
+    .slice(0, 6)
+    .map((t) => ({
+      id: t.id,
+      title: t.title,
+      projectName: t.projectName,
+      dueDate: t.dueDate!.toISOString(),
+      status: t.status,
+    }));
+
+  const userMap: Record<string, { name: string; count: number }> = {};
+  for (const task of allTasks) {
+    if (task.assignee) {
+      const key = task.assignee.id;
+      if (!userMap[key]) {
+        userMap[key] = { name: task.assignee.name ?? "Unknown", count: 0 };
+      }
+      userMap[key].count++;
+    }
+  }
+
+  const tasksPerUser = Object.values(userMap)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
+  return {
+    total: allTasks.length,
+    byStatus,
+    overdueTasks,
+    tasksPerUser,
+  };
+}
+
 export async function removeUserFromProject(projectId: string, userId: string) {
   const session = await getSession();
 
